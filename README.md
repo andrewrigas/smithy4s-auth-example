@@ -1,4 +1,4 @@
-# Smithy4s Auth ZIO Example
+# ZIO Smithy4s Auth Example
 
 ## Run service
 
