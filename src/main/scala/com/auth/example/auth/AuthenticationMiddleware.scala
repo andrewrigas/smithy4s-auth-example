@@ -18,8 +18,7 @@ final class AuthenticationMiddlewareImpl(authenticationService: AuthenticationSe
   override def mid(): HttpApp[Task] => HttpApp[Task] = { inputApp =>
     HttpApp[Task] { request =>
       // I was lazy to create an ADT exceptions are fine :)
-      userFRef
-        .get
+      userFRef.get
         .someOrFail(new Exception("Bad request"))
         .flatMap(authenticationService.authenticate)
         .mapError {
