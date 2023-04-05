@@ -1,12 +1,7 @@
 package com.auth.example
 
-import com.auth.example.auth.{
-  AuthMiddleware,
-  AuthenticationMiddlewareImpl,
-  AuthenticationServiceImpl,
-  ExtractInfoMiddleware
-}
-import com.auth.example.domain.User
+import com.auth.example.http._
+import com.auth.example.auth.{AuthMiddleware, AuthenticationServiceImpl}
 import com.auth.example.repository.UserManagementRepository
 import com.auth.example.service.UserManagementServiceImpl
 import com.comcast.ip4s.IpLiteralSyntax
@@ -15,20 +10,23 @@ import org.http4s.server.Server
 import smithy4s.http4s.SimpleRestJsonBuilder
 import zio.interop.catz._
 import zio.{Fiber, FiberRef, Task, ULayer, ZLayer}
+import com.auth.example.domain.AuthedUser
 
 object HttpApp {
 
-  val resourceRoutes = FiberRef.make(Option.empty[User]).flatMap { userFRef =>
-    val authenticationService    = new AuthenticationServiceImpl(UserManagementRepository)
-    val authenticationMiddleware = new AuthenticationMiddlewareImpl(authenticationService, userFRef)
-    val authMiddleware           = new AuthMiddleware(authenticationMiddleware)
+  val resourceRoutes = FiberRef.make(Option.empty[AuthedUser]).flatMap { userRef =>
+    val authenticationService = new AuthenticationServiceImpl(UserManagementRepository)
+    val storeCurrentUser      = (user: AuthedUser) => userRef.set(Some(user))
+    val getCurrentUser        = userRef.get.someOrFail(Unauthorized())
+    val authMiddleware        = new AuthMiddleware(authenticationService, storeCurrentUser)
+    // val authMiddleware           = new AuthMiddleware(authenticationMiddleware)
 
     SimpleRestJsonBuilder
-      .routes(new UserManagementServiceImpl(UserManagementRepository, userFRef))
+      .routes(new UserManagementServiceImpl(UserManagementRepository, getCurrentUser))
       .middleware(authMiddleware)
+      .mapErrors(_ => InternalServerError())
       .resource
       .toScopedZIO
-      .map(routes => ExtractInfoMiddleware.withRequestInfo(routes, userFRef))
   }
 
   private val server = resourceRoutes.flatMap(routes =>
