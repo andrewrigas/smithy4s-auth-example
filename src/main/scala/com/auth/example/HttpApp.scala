@@ -17,7 +17,7 @@ object HttpApp {
   val resourceRoutes = FiberRef.make(Option.empty[AuthedUser]).flatMap { userRef =>
     val authenticationService = new AuthenticationServiceImpl(UserManagementRepository)
     val storeCurrentUser      = (user: AuthedUser) => userRef.set(Some(user))
-    val getCurrentUser        = userRef.get.someOrFail(BadRequest())
+    val getCurrentUser        = userRef.get.someOrFail(Unauthorized())
     val authMiddleware        = new AuthMiddleware(authenticationService, storeCurrentUser)
     // val authMiddleware           = new AuthMiddleware(authenticationMiddleware)
 
