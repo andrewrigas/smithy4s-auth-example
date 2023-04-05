@@ -9,7 +9,7 @@ trait UserManagementRepository {
 
 object UserManagementRepository extends UserManagementRepository {
 
-  val database = Map("some@email.com" -> DBUser("some@email.com", "password"))
+  val database = Map("some@email.com" -> DBUser("some@email.com", "password", "John", "Doe"))
 
   override def getUser(email: String): Task[Option[DBUser]] = ZIO.succeed(database.get(email))
 }

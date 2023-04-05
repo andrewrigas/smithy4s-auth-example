@@ -19,5 +19,5 @@ final class AuthenticationServiceImpl(userManagementRepository: UserManagementRe
       maybeUserRepo <- userManagementRepository.getUser(user.email)
       userRepo      <- ZIO.fromOption(maybeUserRepo).mapError(_ => NotFound())
       _             <- ZIO.ifZIO(ZIO.succeed(userRepo.password == user.password))(ZIO.unit, ZIO.fail(Unauthorized()))
-    } yield AuthedUser(userRepo.email, userRepo.password)
+    } yield AuthedUser(userRepo.email, userRepo.firstName, userRepo.lastName)
 }
