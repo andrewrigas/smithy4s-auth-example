@@ -7,7 +7,7 @@ import com.auth.example.domain.AuthedUser
 
 final class UserManagementServiceImpl(
     userManagementRepository: UserManagementRepository,
-    getUser: Task[AuthedUser]
+    getCurrentUser: Task[AuthedUser]
 ) extends UserManagementService[Task] {
 
   override def register(memberRegistrationForm: UserRegistrationForm): Task[Unit] = ???
@@ -15,7 +15,7 @@ final class UserManagementServiceImpl(
   // I need the user request data here from Authorization header.
   override def login(): Task[Unit] =
     for {
-      user     <- getUser
+      user     <- getCurrentUser
       userRepo <- userManagementRepository.getUser(user.email).someOrFail(NotFound())
     } yield ()
 }

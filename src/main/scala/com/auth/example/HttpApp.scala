@@ -14,15 +14,15 @@ import com.auth.example.domain.AuthedUser
 
 object HttpApp {
 
-  val resourceRoutes = FiberRef.make(Option.empty[AuthedUser]).flatMap { userFRef =>
+  val resourceRoutes = FiberRef.make(Option.empty[AuthedUser]).flatMap { userRef =>
     val authenticationService = new AuthenticationServiceImpl(UserManagementRepository)
-    val storeUser             = (user: AuthedUser) => userFRef.set(Some(user))
-    val getUser               = userFRef.get.someOrFail(BadRequest())
-    val authMiddleware        = new AuthMiddleware(authenticationService, storeUser)
+    val storeCurrentUser      = (user: AuthedUser) => userRef.set(Some(user))
+    val getCurrentUser        = userRef.get.someOrFail(BadRequest())
+    val authMiddleware        = new AuthMiddleware(authenticationService, storeCurrentUser)
     // val authMiddleware           = new AuthMiddleware(authenticationMiddleware)
 
     SimpleRestJsonBuilder
-      .routes(new UserManagementServiceImpl(UserManagementRepository, getUser))
+      .routes(new UserManagementServiceImpl(UserManagementRepository, getCurrentUser))
       .middleware(authMiddleware)
       .mapErrors(_ => InternalServerError())
       .resource

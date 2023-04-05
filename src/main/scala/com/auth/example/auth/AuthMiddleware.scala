@@ -13,7 +13,7 @@ import cats.syntax.all._
 import org.http4s.dsl.request
 import com.auth.example.domain.AuthedUser
 
-final class AuthMiddleware(authService: AuthenticationService, store: AuthedUser => Task[Unit])
+final class AuthMiddleware(authService: AuthenticationService, storeCurrentUser: AuthedUser => Task[Unit])
     extends ServerEndpointMiddleware.Simple[Task] {
 
   override def prepareWithHints(serviceHints: Hints, endpointHints: Hints): HttpApp[Task] => HttpApp[Task] =
@@ -35,7 +35,7 @@ final class AuthMiddleware(authService: AuthenticationService, store: AuthedUser
     maybeUserRequest
       .liftTo[Task](BadRequest())
       .flatMap(authService.authenticate(_))
-      .flatMap(store)
+      .flatMap(storeCurrentUser)
       .flatMap(_ => underlying(request))
   }
 }
